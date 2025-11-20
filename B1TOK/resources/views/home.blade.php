@@ -9,5 +9,10 @@
 </head>
 <body>
     <h1>Ты дома</h1>
+    @if (Route::has('login'))
+        @auth
+            <h1>Ты авторизован</h1>
+        @endauth
+    @endif
 </body>
 </html>
