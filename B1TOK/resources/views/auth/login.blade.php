@@ -23,9 +23,6 @@
     <button type="submit" class="btn btn-success mt-2">Войти</button>
 </form>
 
-<form action="{{ route('logout') }}"  method="post">
-    @csrf
-    <button type="submit" class="btn btn-success mt-2">Выйти</button>
-</form>
+
 </body>
 </html>

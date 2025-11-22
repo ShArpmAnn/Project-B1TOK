@@ -12,6 +12,11 @@
     @if (Route::has('login'))
         @auth
             <h1>Ты авторизован</h1>
+
+            <form action="{{ route('logout') }}"  method="post">
+                @csrf
+                <button type="submit" class="btn btn-success mt-2">Выйти</button>
+            </form>
         @endauth
     @endif
 </body>
