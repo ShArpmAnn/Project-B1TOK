@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Auth;
 
 class Weight extends Model
 {
@@ -24,6 +25,7 @@ class Weight extends Model
         'now_weight' => 'decimal:2',
         'to_do_weight' => 'decimal:2',
         'used_now' => 'boolean',
+        'callorage' => 'unsignedInteger',
     ];
 
     public function user()
@@ -41,5 +43,11 @@ class Weight extends Model
     public function scopeForUser($query, $userId)
     {
         return $query->where('user_id', $userId);
+    }
+
+    // Scope для быстрого получения текущего значения каллоража
+    public function scopeCallorage($query, $userId)
+    {
+        return $query->forUser($userId)->current()->callorage;
     }
 }

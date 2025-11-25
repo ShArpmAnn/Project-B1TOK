@@ -11,24 +11,24 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('weights', function (Blueprint $table) {
+        Schema::create('сallorages', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')
                 ->constrained()
                 ->onUpdate('cascade')
                 ->onDelete('cascade');
-            $table->decimal('start_weight', 8, 2);
-            $table->decimal('end_weight', 8, 2);
-            $table->decimal('now_weight', 8, 2);
-            $table->decimal('to_do_weight', 8, 2);
-            $table->boolean('used_now')->default(false);
-            $table->unsignedInteger('callorage')->default(0);
-            $table->timestamps();
+            $table->unsignedInteger('to_do_callorage')->default(0);
+            $table->unsignedInteger('now_callorage')->default(0);
+            $table->unsignedInteger('proteins')->default(0);
+            $table->unsignedInteger('fats')->default(0);
+            $table->unsignedInteger('carbohydrates')->default(0);
+            $table->date('date');
 
             // Индексы для оптимизации запросов
             $table->index('user_id');
-            $table->index(['user_id', 'used_now']); // Для быстрого поиска текущей записи
         });
+
+
     }
 
     /**
@@ -36,6 +36,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('weights');
+        Schema::dropIfExists('сallorages');
     }
 };

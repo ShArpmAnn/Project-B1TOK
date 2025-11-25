@@ -6,7 +6,7 @@ Route::get('/', function () {
     return view('home');
 })->name('home');
 
-# Адреса доступные для гостя
+// Адреса доступные для гостя
 Route::middleware('guest')->group(function () {
     Route::get('/register', function (){
         return view('auth/register');
@@ -24,7 +24,7 @@ Route::middleware('guest')->group(function () {
     )->name('login');
 });
 
-# Адреса доступные авторизованным
+// Адреса доступные авторизованным
 Route::middleware('auth')->group(function () {
     Route::post('/logout', 'App\Http\Controllers\Auth\AuthenticatedSessionController@logout'
     )->name('logout');
