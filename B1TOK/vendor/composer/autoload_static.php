@@ -548,11 +548,33 @@ class ComposerStaticInitc514d8f7b9fc5970bdd94287905ef584
         ),
     );
 
+    public static $prefixesPsr0 = array (
+        'B' => 
+        array (
+            'Braunson' => 
+            array (
+                0 => __DIR__ . '/..' . '/braunson/fatsecret-laravel/src',
+            ),
+        ),
+    );
+
     public static $classMap = array (
+        'App\\Http\\Controllers\\Auth\\AuthenticatedSessionController' => __DIR__ . '/../..' . '/app/Http/Controllers/Auth/AuthenticatedSessionController.php',
+        'App\\Http\\Controllers\\Auth\\RegisteredUserController' => __DIR__ . '/../..' . '/app/Http/Controllers/Auth/RegisteredUserController.php',
+        'App\\Http\\Controllers\\CallorageController' => __DIR__ . '/../..' . '/app/Http/Controllers/CallorageController.php',
         'App\\Http\\Controllers\\Controller' => __DIR__ . '/../..' . '/app/Http/Controllers/Controller.php',
+        'App\\Http\\Controllers\\PersonalCabinetController' => __DIR__ . '/../..' . '/app/Http/Controllers/PersonalCabinetController.php',
+        'App\\Http\\Controllers\\WeightController' => __DIR__ . '/../..' . '/app/Http/Controllers/WeightController.php',
+        'App\\Http\\Requests\\Auth\\LoginRequest' => __DIR__ . '/../..' . '/app/Http/Requests/Auth/LoginRequest.php',
+        'App\\Models\\Callorage' => __DIR__ . '/../..' . '/app/Models/Callorage.php',
         'App\\Models\\User' => __DIR__ . '/../..' . '/app/Models/User.php',
+        'App\\Models\\Weight' => __DIR__ . '/../..' . '/app/Models/Weight.php',
         'App\\Providers\\AppServiceProvider' => __DIR__ . '/../..' . '/app/Providers/AppServiceProvider.php',
         'Attribute' => __DIR__ . '/..' . '/symfony/polyfill-php80/Resources/stubs/Attribute.php',
+        'Braunson\\FatSecret\\Facade' => __DIR__ . '/..' . '/braunson/fatsecret-laravel/src/Braunson/FatSecret/Facade.php',
+        'Braunson\\FatSecret\\FatSecret' => __DIR__ . '/..' . '/braunson/fatsecret-laravel/src/Braunson/FatSecret/FatSecret.php',
+        'Braunson\\FatSecret\\FatSecretServiceProvider' => __DIR__ . '/..' . '/braunson/fatsecret-laravel/src/Braunson/FatSecret/FatSecretServiceProvider.php',
+        'Braunson\\FatSecret\\OAuthBase' => __DIR__ . '/..' . '/braunson/fatsecret-laravel/src/Braunson/FatSecret/OAuthBase.php',
         'Brick\\Math\\BigDecimal' => __DIR__ . '/..' . '/brick/math/src/BigDecimal.php',
         'Brick\\Math\\BigInteger' => __DIR__ . '/..' . '/brick/math/src/BigInteger.php',
         'Brick\\Math\\BigNumber' => __DIR__ . '/..' . '/brick/math/src/BigNumber.php',
@@ -6917,6 +6939,7 @@ class ComposerStaticInitc514d8f7b9fc5970bdd94287905ef584
         return \Closure::bind(function () use ($loader) {
             $loader->prefixLengthsPsr4 = ComposerStaticInitc514d8f7b9fc5970bdd94287905ef584::$prefixLengthsPsr4;
             $loader->prefixDirsPsr4 = ComposerStaticInitc514d8f7b9fc5970bdd94287905ef584::$prefixDirsPsr4;
+            $loader->prefixesPsr0 = ComposerStaticInitc514d8f7b9fc5970bdd94287905ef584::$prefixesPsr0;
             $loader->classMap = ComposerStaticInitc514d8f7b9fc5970bdd94287905ef584::$classMap;
 
         }, null, ClassLoader::class);

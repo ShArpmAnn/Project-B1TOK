@@ -6,10 +6,22 @@ $vendorDir = dirname(__DIR__);
 $baseDir = dirname($vendorDir);
 
 return array(
+    'App\\Http\\Controllers\\Auth\\AuthenticatedSessionController' => $baseDir . '/app/Http/Controllers/Auth/AuthenticatedSessionController.php',
+    'App\\Http\\Controllers\\Auth\\RegisteredUserController' => $baseDir . '/app/Http/Controllers/Auth/RegisteredUserController.php',
+    'App\\Http\\Controllers\\CallorageController' => $baseDir . '/app/Http/Controllers/CallorageController.php',
     'App\\Http\\Controllers\\Controller' => $baseDir . '/app/Http/Controllers/Controller.php',
+    'App\\Http\\Controllers\\PersonalCabinetController' => $baseDir . '/app/Http/Controllers/PersonalCabinetController.php',
+    'App\\Http\\Controllers\\WeightController' => $baseDir . '/app/Http/Controllers/WeightController.php',
+    'App\\Http\\Requests\\Auth\\LoginRequest' => $baseDir . '/app/Http/Requests/Auth/LoginRequest.php',
+    'App\\Models\\Callorage' => $baseDir . '/app/Models/Callorage.php',
     'App\\Models\\User' => $baseDir . '/app/Models/User.php',
+    'App\\Models\\Weight' => $baseDir . '/app/Models/Weight.php',
     'App\\Providers\\AppServiceProvider' => $baseDir . '/app/Providers/AppServiceProvider.php',
     'Attribute' => $vendorDir . '/symfony/polyfill-php80/Resources/stubs/Attribute.php',
+    'Braunson\\FatSecret\\Facade' => $vendorDir . '/braunson/fatsecret-laravel/src/Braunson/FatSecret/Facade.php',
+    'Braunson\\FatSecret\\FatSecret' => $vendorDir . '/braunson/fatsecret-laravel/src/Braunson/FatSecret/FatSecret.php',
+    'Braunson\\FatSecret\\FatSecretServiceProvider' => $vendorDir . '/braunson/fatsecret-laravel/src/Braunson/FatSecret/FatSecretServiceProvider.php',
+    'Braunson\\FatSecret\\OAuthBase' => $vendorDir . '/braunson/fatsecret-laravel/src/Braunson/FatSecret/OAuthBase.php',
     'Brick\\Math\\BigDecimal' => $vendorDir . '/brick/math/src/BigDecimal.php',
     'Brick\\Math\\BigInteger' => $vendorDir . '/brick/math/src/BigInteger.php',
     'Brick\\Math\\BigNumber' => $vendorDir . '/brick/math/src/BigNumber.php',
