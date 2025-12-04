@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 use App\Models\Callorage;
+use App\Models\DiaryFood;
 use App\Models\Weight;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
@@ -38,6 +39,9 @@ class CallorageController extends Controller
             'fats' => $currentCallorage->fats + $foodData['fat'],
             'carbohydrates' => $currentCallorage->carbohydrates + $foodData['carbohydrates'],
         ]);
+
+        $diary = new DiaryFood;
+        $diary->update($currentCallorage->id(), $foodData['eat_type'], $foodData['name']);
 
 
         return redirect()->intended(route('diary', absolute: false));

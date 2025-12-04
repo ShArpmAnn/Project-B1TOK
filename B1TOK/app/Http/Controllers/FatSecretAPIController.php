@@ -83,7 +83,8 @@ class FoodController extends Controller
                 'carbohydrates' => $selectedServing['carbohydrates'] * $quantity,
                 'serving_description' => $selectedServing['description'],
                 'quantity' => $quantity,
-                'date' => $request->input('date')
+                'date' => $request->date,
+                'eat_type' => $request->eat_type,
             ];
 
             // Передаем данные в CallorageController
