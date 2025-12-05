@@ -1,33 +1,38 @@
-<!doctype html>
-<html lang="en">
+<!DOCTYPE html>
+<html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport"
-          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
-    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Регистрация</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="CSS/normal.css">
+    <link rel="stylesheet" href="CSS/LR-style.css">
+    
 </head>
 <body>
-    <form action="{{ route('register') }}"  method="post">
-        @csrf
-        <div class="form-group">
-            <label for="name">Имя</label>
-            <input type="text" name="name" placeholder="Введите имя" id="name" class="form-control">
-        </div>
-        <div class="form-group mt-3">
-            <label for="email">Email</label>
-            <input type="email" name="email" placeholder="Введите email" id="email" class="form-control">
-        </div>
-        <div class="form-group mt-3">
-            <label for="password">Пароль</label>
-            <input type="password" name="password" placeholder="Введите пароль" id="password" class="form-control">
-        </div>
-        <div class="form-group mt-3">
-            <label for="password_confirmation">Подтверждение пороля</label>
-            <input type="password" name="password_confirmation" placeholder="Введите пароль снова" id="password_confirmation" class="form-control">
-        </div>
-        <button type="submit" class="btn btn-success mt-2">Зарегистрироваться</button>
-    </form>
+    <main>
+        <form class="Форма" action="">
+            <img 
+            class="лого"
+            src="images/лого.jpg" 
+            alt="logo"
+            width="100px"
+            height="100px"
+            />
+            <label for="login"></label>
+            <input class="ввод логин" type="text" id="login" name="user-login" placeholder="Логин">
+
+            <label for="email"></label>
+            <input class="ввод логин" type="email" id="email" name="user-email" placeholder="Почта">
+
+            <label for="password"></label>
+            <input class="ввод пароль" type="text" id="password" name="user-password" placeholder="Пароль">
+
+            <label for="repeat-password"></label>
+            <input class="ввод пароль" type="text" id="repeat-password" name="user-repeat-password" placeholder="Повтор пароля">
+
+            <button class="ввод кнопка" type="submit">Отправить данные</button>
+
+        </form>
+    </main>
 </body>
 </html>
