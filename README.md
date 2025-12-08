@@ -2,5 +2,5 @@
 
 ## Структура проекта
 
-- [backend](./app)
-- [frontend](./resources)
+- [backend](./B1TOK/app)
+- [frontend](./B1TOK/resources)
