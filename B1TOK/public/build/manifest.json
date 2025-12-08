@@ -1,0 +1,20 @@
+{
+  "resources/css/LS-style.css": {
+    "file": "assets/LS-style-Bji9Rv53.css",
+    "src": "resources/css/LS-style.css",
+    "isEntry": true,
+    "name": "LS-style",
+    "names": [
+      "LS-style.css"
+    ]
+  },
+  "resources/css/main.css": {
+    "file": "assets/main-CaQVuu2K.css",
+    "src": "resources/css/main.css",
+    "isEntry": true,
+    "name": "main",
+    "names": [
+      "main.css"
+    ]
+  }
+}

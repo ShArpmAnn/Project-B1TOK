@@ -4,31 +4,31 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Регистрация</title>
-    <link rel="stylesheet" href="CSS/normal.css">
-    <link rel="stylesheet" href="CSS/LR-style.css">
-    
+    @vite(['resources/css/LS-style.css'])
+
 </head>
 <body>
     <main>
-        <form class="Форма" action="">
-            <img 
+        <form class="Форма" action="{{ route('register') }}" method="post">
+            @csrf
+            <img
             class="лого"
-            src="images/лого.jpg" 
+            src="{{ asset('images/logo.jpg') }}"
             alt="logo"
             width="100px"
             height="100px"
             />
             <label for="login"></label>
-            <input class="ввод логин" type="text" id="login" name="user-login" placeholder="Логин">
+            <input class="ввод логин" type="text" id="name" name="name" placeholder="Логин">
 
             <label for="email"></label>
-            <input class="ввод логин" type="email" id="email" name="user-email" placeholder="Почта">
+            <input class="ввод логин" type="email" id="email" name="email" placeholder="Почта">
 
             <label for="password"></label>
-            <input class="ввод пароль" type="text" id="password" name="user-password" placeholder="Пароль">
+            <input class="ввод пароль" type="password" id="password" name="password" placeholder="Пароль">
 
-            <label for="repeat-password"></label>
-            <input class="ввод пароль" type="text" id="repeat-password" name="user-repeat-password" placeholder="Повтор пароля">
+            <label for="password_confirmation"></label>
+            <input class="ввод пароль" type="password" id="password_confirmation" name="password_confirmation" placeholder="Повтор пароля">
 
             <button class="ввод кнопка" type="submit">Отправить данные</button>
 

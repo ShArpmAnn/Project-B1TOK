@@ -17,8 +17,8 @@ class RegisteredUserController extends Controller
 
         # Валидация формы регистрации
         $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
+            'name' => ['required', 'string', 'max:255', 'regex:/^[\p{L}\s\-]+$/u'],
+            'email' => ['required', 'string', 'lowercase', 'email:rfc,dns', 'max:255', 'unique:'.User::class],
             'password' => ['required', 'confirmed', Rules\Password::defaults()
                 ->symbols()
             ],
@@ -27,7 +27,7 @@ class RegisteredUserController extends Controller
 
         # Создание пользователя в базе данных
         $user = User::create([
-            'name' => $request->name,
+            'name' => htmlspecialchars($request->name),
             'email' => $request->email,
             'password' => Hash::make($request->password),
         ]);
@@ -36,7 +36,7 @@ class RegisteredUserController extends Controller
         Auth::login($user);
 
 
-        return redirect(route('home', absolute: false));
+        return redirect(route('home', absolute: false))->with('success', 'Регистрация успешна');
     }
 
 }

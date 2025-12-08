@@ -17,6 +17,11 @@ class DiaryFood extends Model
         'eat_type' => 'string',
     ];
 
+    public function user()
+    {
+        return $this->belongsTo(Callorage::class);
+    }
+
     // Scope для конкретного дня и типа приёма пищи
     public function scopeForDiary($query, $calloragesId, $type)
     {

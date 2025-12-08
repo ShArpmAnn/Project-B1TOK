@@ -8,17 +8,23 @@ use Illuminate\Http\Request;
 
 class DiaryFoodController extends Controller
 {
-    # Сохранение продуктов из дневника по типу приёма пищи
-    public function update($callorages_id, $eat_type, $food_name) : RedirectResponse {
-        $diary = DiaryFood::forDiary($callorages_id, $eat_type)->first();
+    // Сохранение продуктов из дневника по типу приёма пищи
+    public function update($Diary) : RedirectResponse {
+        $diary = DiaryFood::forDiary($Diary['callorages_id'], $Diary['eat_type'])->first();
+        $food = $diary->food;
 
-        $food[] = $food_name;
+        $food[$Diary['name']] = [
+            'calories' => $Diary['calories'],
+            'proteins' => $Diary['proteins'],
+            'fats' => $Diary['fats'],
+            'carbohydrates' => $Diary['carbohydrates'],
+        ];
 
         if (!$diary) {
             DiaryFood::create([
-                'callorages_id' => $callorages_id,
+                'callorages_id' => $Diary['callorages_id'],
                 'food' => $food,
-                'eat_type' => $eat_type,
+                'eat_type' => $Diary['eat_type'],
             ]);
         }
         else {

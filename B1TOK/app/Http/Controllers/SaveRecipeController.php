@@ -4,13 +4,12 @@ namespace App\Http\Controllers;
 
 use App\Models\SaveRecipe;
 use Illuminate\Http\Request;
-use App\Models\Callorage;
-use App\Models\Weight;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
 
 class SaveRecipeController extends Controller
 {
+    // Создание рецепта
     public function create(Request $request) : RedirectResponse
     {
         $food = explode(" ", $request->food);
@@ -25,9 +24,10 @@ class SaveRecipeController extends Controller
             'food' => $food,
         ]);
 
-        return redirect()->route('save_recipes');
+        return redirect(route('save_recipes'))->with('success', 'Рецепт успешно сохранён');
     }
 
+    // Изменениее рецепта
     public function update(Request $request) : RedirectResponse {
         $food = explode(" ", $request->food);
 
@@ -40,7 +40,16 @@ class SaveRecipeController extends Controller
             'food' => $food,
         ]);
 
-        return redirect()->route('save_recipes');
+        return redirect(route('save_recipes'))->with('success', 'Рецепт успешно обнавлён');
+    }
+
+    // Удаление рецепта
+    public function delete(Request $request) : RedirectResponse {
+        $recipe = SaveRecipe::forUser(Auth::id())->where('id', $request->id)->first();
+
+        $recipe->delete();
+        return redirect(route('save_recipes'))->with('success', 'Рецепт успешно удален');
+
     }
 
 }
