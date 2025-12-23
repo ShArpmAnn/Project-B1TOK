@@ -7,57 +7,40 @@ use App\Http\Controllers\CallorageController;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 
-class FoodController extends Controller
+class FatSecretAPIController extends Controller
 {
     /**
-     * Поиск продуктов и передача данных в CallorageController
+     * Получение информации о продукте и добавление в дневник
      */
-    public function search(Request $request): JsonResponse
+    public function AddToDiary(Request $request): JsonResponse
     {
         $request->validate([
             'query' => 'required|string|min:2|max:100',
             'date' => 'required|date',
-            'page' => 'sometimes|integer|min:0',
-            'max_results' => 'sometimes|integer|min:1|max:50'
+            'max_results' => 'sometimes|integer|min:1|max:50',
+            'serving_index' => 'sometimes|integer|min:0', // индекс порции
+            'quantity' => 'sometimes|numeric|min:0.1' // количество порций
         ]);
 
         try {
             // Ищем продукты
             $searchResult = FatSecret::searchIngredients(
                 $request->input('query'),
-                $request->input('page', 0),
-                $request->input('max_results', 10)
+                0,
+                10
             );
 
-            $foods = $this->formatSearchResults($searchResult);
-
-            return response()->json([
-                'success' => true,
-                'data' => $foods
-            ]);
-
+            $food = $this->formatSearchResults($searchResult);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
                 'error' => $e->getMessage()
             ], 500);
         }
-    }
-
-    /**
-     * Получение информации о продукте и добавление в дневник
-     */
-    public function AddToDiary(Request $request, $id): JsonResponse
-    {
-        $request->validate([
-            'date' => 'required|date',
-            'serving_index' => 'sometimes|integer|min:0', // индекс порции
-            'quantity' => 'sometimes|numeric|min:0.1' // количество порций
-        ]);
 
         try {
             // Получаем информацию о продукте
-            $result = FatSecret::getIngredient($id);
+            $result = FatSecret::getIngredient($food['id']);
             $foodData = $this->formatFoodDetails($result);
 
             if (empty($foodData)) {

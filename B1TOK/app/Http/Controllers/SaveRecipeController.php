@@ -51,6 +51,5 @@ class SaveRecipeController extends Controller
         return redirect(route('save_recipes'))->with('success', 'Рецепт успешно удален');
 
     }
-
 }
 

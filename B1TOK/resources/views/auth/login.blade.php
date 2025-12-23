@@ -19,7 +19,7 @@
             height="100px"
             />
             <label for="email"></label>
-            <input class="ввод email" type="text" id="email" name="email" placeholder="Почта">
+            <input class="ввод email" type="email" id="email" name="email" placeholder="Почта">
 
             <label for="password"></label>
             <input class="ввод пароль" type="password" id="password" name="password" placeholder="Пароль">

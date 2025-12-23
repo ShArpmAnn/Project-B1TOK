@@ -36,5 +36,4 @@ class SaveRecipe extends Model
     {
         return $query->where('user_id', $userId);
     }
-
 }

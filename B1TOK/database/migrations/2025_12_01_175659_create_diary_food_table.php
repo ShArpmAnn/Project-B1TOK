@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('diary_food', function (Blueprint $table) {
             $table->id();
             $table->foreignId('callorages_id')
-                ->constrained()
+                ->constrained('callorages')
                 ->onUpdate('cascade')
                 ->onDelete('cascade');
             $table->json('food')->nullable();

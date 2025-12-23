@@ -35,6 +35,4 @@ class DiaryFoodController extends Controller
 
         return redirect()->intended(route('diary', absolute: false));
     }
-
-
 }

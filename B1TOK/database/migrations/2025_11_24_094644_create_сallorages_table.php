@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('сallorages', function (Blueprint $table) {
+        Schema::create('callorages', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')
                 ->constrained()
@@ -27,10 +27,7 @@ return new class extends Migration
             // Индексы для оптимизации запросов
             $table->index('user_id');
         });
-
-
     }
-
     /**
      * Reverse the migrations.
      */

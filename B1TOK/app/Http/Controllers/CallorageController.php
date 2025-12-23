@@ -92,5 +92,4 @@ class CallorageController extends Controller
 
         return redirect()->intended(route('diary', absolute: false))->with('success', 'Запись удалена');
     }
-
 }
