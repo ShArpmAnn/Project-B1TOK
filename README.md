@@ -11,5 +11,5 @@
 ## Структура проекта
 
 - [backend](./B1TOK/app)
-- - [tests](./B1TOK/tests/Feature)
+  - [tests](./B1TOK/tests/Feature)
 - [frontend](./B1TOK/resources)
