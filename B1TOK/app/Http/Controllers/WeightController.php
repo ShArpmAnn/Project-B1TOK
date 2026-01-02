@@ -12,13 +12,22 @@ class WeightController extends Controller
     // Создание новой цели
     public function store(Request $request): RedirectResponse{
 
-        switch ($request->gender){
-            case 'male':
-                $BMR = (10 * $request->start_weight) + (6.25 * $request->hight) - (5 * $request->old) + 5;
-                break;
-            case 'female':
-                $BMR = (10 * $request->start_weight) + (6.25 * $request->hight) - (5 * $request->old) - 161;
-                break;
+        $request->validate([
+            'gender' => 'required|in:male,female',
+            'start_weight' => 'required|numeric|min:1',
+            'height' => 'required|numeric|min:1',
+            'old' => 'required|numeric|min:1',
+            'end_weight' => 'required|numeric|min:1',
+            'activity' => 'required|in:min,light,medium,big,very_big',
+            'choose' => 'required|in:drop,increase',
+            'temp' => 'required|in:slow,fast',
+        ]);
+
+        if ($request->gender == 'male') {
+            $BMR = (10 * $request->start_weight) + (6.25 * $request->height) - (5 * $request->old) + 5;
+        }
+        if ($request->gender == 'female'){
+            $BMR = (10 * $request->start_weight) + (6.25 * $request->height) - (5 * $request->old) - 161;
         }
 
         switch ($request->activity){
@@ -60,6 +69,8 @@ class WeightController extends Controller
                         break;
                 }
         }
+
+        $BMR = round($BMR);
 
         $currentWeight = Weight::forUser(Auth::id())->current()->first();
 
@@ -71,24 +82,35 @@ class WeightController extends Controller
             'user_id' => Auth::id(),
             'start_weight' => $request->start_weight,
             'end_weight' => $request->end_weight,
-            'now_weight' => $request->now_weight,
-            'to_do_weight' => $request->to_do_weight,
+            'now_weight' => $request->start_weight,
+            'to_do_weight' => $request->end_weight-$request->start_weight,
             'used_now' => True,
             'callorage' => $BMR,
         ]);
 
-        return redirect()->intended(route('personal-cabinet', absolute: false));
+        return redirect()->intended(route('personal_cabinet', absolute: false))->with('success', 'Цель создана');
     }
 
     // Обновление всех значений цели
     public function update_all(Request $request): RedirectResponse{
-        switch ($request->gender){
-            case 'male':
-                $BMR = (10 * $request->start_weight) + (6.25 * $request->hight) - (5 * $request->old) + 5;
-                break;
-            case 'female':
-                $BMR = (10 * $request->start_weight) + (6.25 * $request->hight) - (5 * $request->old) - 161;
-                break;
+
+        $request->validate([
+            'gender' => 'required|in:male,female',
+            'start_weight' => 'required|numeric|min:1',
+            'now_weight' => 'required|numeric|min:1',
+            'height' => 'required|numeric|min:1',
+            'old' => 'required|numeric|min:1',
+            'end_weight' => 'required|numeric|min:1',
+            'activity' => 'required|in:min,light,medium,big,very_big',
+            'choose' => 'required|in:drop,increase',
+            'temp' => 'required|in:slow,fast',
+        ]);
+
+        if ($request->gender == 'male') {
+            $BMR = (10 * $request->start_weight) + (6.25 * $request->height) - (5 * $request->old) + 5;
+        }
+        if ($request->gender == 'female'){
+            $BMR = (10 * $request->start_weight) + (6.25 * $request->height) - (5 * $request->old) - 161;
         }
 
         switch ($request->activity){
@@ -131,23 +153,33 @@ class WeightController extends Controller
                 }
         }
 
+        $BMR = round($BMR);
+
         Weight::forUser(Auth::id())->current()->first()->update([
             'start_weight' => $request->start_weight,
             'end_weight' => $request->end_weight,
             'now_weight' => $request->now_weight,
-            'to_do_weight' => $request->to_do_weight,
+            'to_do_weight' => $request->end_weight-$request->now_weight,
             'callorage' => $BMR,
         ]);
 
-        return redirect()->intended(route('personal-cabinet', absolute: false));
+        return redirect()->intended(route('personal_cabinet', absolute: false))->with('success', 'Цель успешно обновлена');
     }
 
     // Обновление нынешнего веса
     public function update_now_weight(Request $request): RedirectResponse{
-        Weight::forUser(Auth::id())->current()->first()->update([
-            'now_weight' => $request->now_weight,
+
+        $request->validate([
+            'now_weight' => 'required|numeric|min:1',
         ]);
 
-        return redirect()->intended(route('personal-cabinet', absolute: false));
+        $Weight = Weight::forUser(Auth::id())->current()->first();
+
+        Weight::forUser(Auth::id())->current()->first()->update([
+            'now_weight' => $request->now_weight,
+            'to_do_weight' => $Weight->end_weight-$request->now_weight,
+        ]);
+
+        return redirect()->intended(route('personal_cabinet', absolute: false))->with('success', 'Вес успешно обновлён');
     }
 }

@@ -8,7 +8,7 @@ class SaveRecipe extends Model
 {
     protected $fillable = [
         'user_id',
-        'calories',
+        'callorage',
         'proteins',
         'fats',
         'carbohydrates',
@@ -19,10 +19,10 @@ class SaveRecipe extends Model
     protected $casts = [
         'food' => 'array', // Автоматическая конвертация JSON в массив PHP
         'title' => 'string',
-        'calories' => 'unsingedInteger',
-        'proteins' => 'unsingedInteger',
-        'fats' => 'unsingedInteger',
-        'carbohydrates' => 'unsingedInteger',
+        'callorage' => 'integer',
+        'proteins' => 'integer',
+        'fats' => 'integer',
+        'carbohydrates' => 'integer',
     ];
 
 

@@ -20,7 +20,7 @@ class AuthFlowTest extends TestCase
         // Arrange
         $userData = [
             'name' => 'Иван Иванов',
-            'email' => 'ivan@gmail.com',
+            'email' => 'grigorovskii28@mail.ru',
             'password' => 'SecurePassword123!@#',
             'password_confirmation' => 'SecurePassword123!@#',
         ];
@@ -35,10 +35,10 @@ class AuthFlowTest extends TestCase
         // Проверяем создание пользователя в базе
         $this->assertDatabaseHas('users', [
             'name' => htmlspecialchars('Иван Иванов'),
-            'email' => 'ivan@gmail.com',
+            'email' => 'grigorovskii28@mail.ru',
         ]);
 
-        $user = User::where('email', 'ivan@gmail.com')->first();
+        $user = User::where('email', 'grigorovskii28@mail.ru')->first();
         $this->assertNotNull($user);
 
         // Проверяем хэширование пароля
@@ -126,7 +126,7 @@ class AuthFlowTest extends TestCase
         // 1. Регистрация нового аккаунта
         $registerData = [
             'name' => 'Анна Сидорова',
-            'email' => 'anna@gmail.com',
+            'email' => 'annadod28@gmail.com',
             'password' => 'AnnaPass123!@#',
             'password_confirmation' => 'AnnaPass123!@#',
         ];
@@ -135,7 +135,7 @@ class AuthFlowTest extends TestCase
         $response->assertRedirect('/');
         $response->assertSessionHas('success', 'Регистрация успешна');
 
-        $user = User::where('email', 'anna@gmail.com')->first();
+        $user = User::where('email', 'annadod28@gmail.com')->first();
         $this->assertNotNull($user);
         $this->assertAuthenticatedAs($user);
 
@@ -146,7 +146,7 @@ class AuthFlowTest extends TestCase
 
         // 3. Повторный вход
         $response = $this->post('/login', [
-            'email' => 'anna@gmail.com',
+            'email' => 'annadod28@gmail.com',
             'password' => 'AnnaPass123!@#',
         ]);
 
@@ -164,13 +164,13 @@ class AuthFlowTest extends TestCase
     {
         // Arrange
         $user = User::factory()->create([
-            'email' => 'user@gmail.com',
+            'email' => 'userman28@gmail.com',
             'password' => Hash::make('CorrectPassword123!'),
         ]);
 
         // Act - неправильный пароль
         $response = $this->post('/login', [
-            'email' => 'user@gmail.com',
+            'email' => 'userman28@gmail.com',
             'password' => 'WrongPassword123!',
         ]);
 
@@ -280,7 +280,7 @@ class AuthFlowTest extends TestCase
 
         // Пытаемся получить доступ к защищенному маршруту
         // (замените '/dashboard' на ваш защищенный маршрут если есть)
-        $response = $this->post('/logout');
+        $response = $this->get(route('create_weight'));
         // Ожидаем редирект на логин или ошибку 403/401
         $this->assertTrue(in_array($response->getStatusCode(), [302, 401, 403]));
     }
@@ -295,7 +295,7 @@ class AuthFlowTest extends TestCase
         ]);
 
         // Сначала неавторизованный запрос
-        $response = $this->get('/'); // или другой защищенный маршрут
+        $response = $this->get('/create_weight'); // или другой защищенный маршрут
         $initialStatus = $response->getStatusCode();
 
         // Вход
@@ -305,7 +305,7 @@ class AuthFlowTest extends TestCase
         ]);
 
         // Повторный запрос после входа
-        $response = $this->post('/logout'); // или другой защищенный маршрут
+        $response = $this->get(route('create_weight')); // или другой защищенный маршрут
 
         // Проверяем что статус изменился (например, был 302 редирект, стал 200)
         $this->assertNotEquals($initialStatus, $response->getStatusCode());
@@ -318,12 +318,12 @@ class AuthFlowTest extends TestCase
 
         $response = $this->post('/register', [
             'name' => 'Security Test',
-            'email' => 'security@gmail.com',
+            'email' => 'security28@gmail.com',
             'password' => $password,
             'password_confirmation' => $password,
         ]);
 
-        $user = User::where('email', 'security@gmail.com')->first();
+        $user = User::where('email', 'security28@gmail.com')->first();
 
         // Пароль не должен храниться в открытом виде
         $this->assertNotEquals($password, $user->password);

@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\CallorageController;
 use App\Http\Controllers\FatSecretAPIController;
+use App\Http\Controllers\SaveRecipeController;
 use App\Http\Controllers\WeightController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Auth\RegisteredUserController;
@@ -34,28 +35,32 @@ Route::middleware('auth')->group(function () {
     Route::post('/logout', [AuthenticatedSessionController::class, 'logout']
     )->name('logout');
 
+    Route::get('/personal_cabinet', function (){
+        return view('personal_cabinet');
+    })->name('personal_cabinet');
+
     // Работа с целями
-    Route::get('/create_weight', function (){
+    Route::get('/weight/create', function (){
         return view('weight/create_weight');
     })->name('create_weight');
 
-    Route::post('/create_weight', [WeightController::class, 'store']
+    Route::post('/weight/create', [WeightController::class, 'store']
     )->name('create_weight');
 
 
-    Route::get('/update_weight', function (){
+    Route::get('/weight/update', function (){
         return view('weight/update_weight');
     })->name('update_weight');
 
-    Route::post('/update_weight', [WeightController::class, 'update_all']
+    Route::post('/weight/update', [WeightController::class, 'update_all']
     )->name('update_weight');
 
 
-    Route::get('/update_now_weight', function (){
+    Route::get('/weight/update_now', function (){
         return view('weight/update_now_weight');
     })->name('update_now_weight');
 
-    Route::post('/update_now_weight', [WeightController::class, 'update_now_weight']
+    Route::post('/weight/update_now', [WeightController::class, 'update_now_weight']
     )->name('update_now_weight');
 
 //  Работа с дневником
@@ -76,6 +81,32 @@ Route::middleware('auth')->group(function () {
     Route::post('diary/delete', [CallorageController::class, 'delete']
     )->name('diary_delete');
 
+
+    // Работа с рецептами
+    Route::get('/recipes', function (){
+        return view('recipes/recipes');
+    })->name('save_recipes');
+
+    Route::get('/recipes/new', function (){
+        return view('recipes/new');
+    })->name('new_recipes');
+
+    Route::post('recipes/new', [SaveRecipeController::class, 'create']
+    )->name('new_recipes');
+
+    Route::get('/recipes/update', function (){
+        return view('recipes/update');
+    })->name('update_recipes');
+
+    Route::post('/recipes/update', [SaveRecipeController::class, 'update']
+    )->name('update_recipes');
+
+    Route::get('/recipes/delete', function (){
+        return view('recipes/delete');
+    })->name('delete_recipes');
+
+    Route::post('/recipes/delete', [SaveRecipeController::class, 'delete']
+    )->name('delete_recipes');
 
 });
 

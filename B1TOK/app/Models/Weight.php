@@ -16,7 +16,8 @@ class Weight extends Model
         'end_weight',
         'now_weight',
         'to_do_weight',
-        'used_now'
+        'used_now',
+        'callorage'
     ];
 
     protected $casts = [
@@ -25,7 +26,7 @@ class Weight extends Model
         'now_weight' => 'decimal:2',
         'to_do_weight' => 'decimal:2',
         'used_now' => 'boolean',
-        'callorage' => 'unsignedInteger',
+        'callorage' => 'integer',
     ];
 
     public function user()

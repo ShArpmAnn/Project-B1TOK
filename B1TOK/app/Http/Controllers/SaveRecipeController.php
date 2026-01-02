@@ -40,7 +40,7 @@ class SaveRecipeController extends Controller
             'food' => $food,
         ]);
 
-        return redirect(route('save_recipes'))->with('success', 'Рецепт успешно обнавлён');
+        return redirect(route('save_recipes'))->with('success', 'Рецепт успешно обновлён');
     }
 
     // Удаление рецепта
