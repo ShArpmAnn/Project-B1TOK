@@ -19,9 +19,9 @@ return new class extends Migration
                 ->onDelete('cascade');
             $table->unsignedInteger('to_do_callorage')->default(0);
             $table->unsignedInteger('now_callorage')->default(0);
-            $table->unsignedInteger('proteins')->default(0);
-            $table->unsignedInteger('fats')->default(0);
-            $table->unsignedInteger('carbohydrates')->default(0);
+            $table->decimal('proteins', 8, 2)->default(0);
+            $table->decimal('fats', 8, 2)->default(0);
+            $table->decimal('carbohydrates', 8, 2)->default(0);
             $table->date('date');
 
             // Индексы для оптимизации запросов
@@ -33,6 +33,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('сallorages');
+        Schema::dropIfExists('callorages');
     }
 };

@@ -35,4 +35,9 @@ return [
         ],
     ],
 
+    'fatsecret' => [
+        'key' => env('FATSECRET_KEY'),
+        'secret' => env('FATSECRET_SECRET'),
+    ],
+
 ];

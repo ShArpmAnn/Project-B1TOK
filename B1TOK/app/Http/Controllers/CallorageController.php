@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 use App\Models\Callorage;
 use App\Models\DiaryFood;
 use App\Models\Weight;
-use GuzzleHttp\Psr7\Request;
+use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
 
@@ -18,10 +18,11 @@ class CallorageController extends Controller
         if(! $currentCallorage){
             Callorage::create([
                 'user_id' => Auth::id(),
-                'to_do_callorage' => Weight::forUser(Auth::id())->current()->callorage,
+                'to_do_callorage' => Weight::forUser(Auth::id())->current()->first()->callorage,
                 'date' => $foodData['date'],
             ]);
         }
+        $currentCallorage = Callorage::forUser(Auth::id())->date($foodData['date'])->first();
 
         if ($currentCallorage->to_do_callorage - $foodData['calories'] < 0){
             $currentCallorage->update([
@@ -36,8 +37,8 @@ class CallorageController extends Controller
 
         $currentCallorage->update([
             'now_callorage' => $currentCallorage->now_callorage + $foodData['calories'],
-            'proteins' => $currentCallorage->proteins + $foodData['protein'],
-            'fats' => $currentCallorage->fats + $foodData['fat'],
+            'proteins' => $currentCallorage->proteins + $foodData['proteins'],
+            'fats' => $currentCallorage->fats + $foodData['fats'],
             'carbohydrates' => $currentCallorage->carbohydrates + $foodData['carbohydrates'],
         ]);
 
@@ -51,8 +52,8 @@ class CallorageController extends Controller
             'carbohydrates' => $foodData['carbohydrates'],
         ];
 
-        $diary = new DiaryFood;
-        $diary->update($Diary);
+        $diaryController = new DiaryFoodController();
+        $diaryController->update($Diary);
 
 
         return redirect()->intended(route('diary', absolute: false))->with('success', 'Запись сохранена');

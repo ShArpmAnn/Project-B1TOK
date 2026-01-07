@@ -3,109 +3,122 @@ namespace Braunson\FatSecret;
 
 class OAuthBase
 {
-	/* OAuth Parameters */
+    /* OAuth Parameters */
 
-	static public $OAUTH_VERSION_NUMBER = '1.0';
-	static public $OAUTH_PARAMETER_PREFIX = 'oauth_';
-	static public $XOAUTH_PARAMETER_PREFIX = 'xoauth_';
-	static public $PEN_SOCIAL_PARAMETER_PREFIX = 'opensocial_';
+    static public $OAUTH_VERSION_NUMBER = '1.0';
+    static public $OAUTH_PARAMETER_PREFIX = 'oauth_';
+    static public $XOAUTH_PARAMETER_PREFIX = 'xoauth_';
+    static public $PEN_SOCIAL_PARAMETER_PREFIX = 'opensocial_';
 
-	static public $OAUTH_CONSUMER_KEY = 'oauth_consumer_key';
-	static public $OAUTH_CALLBACK = 'oauth_callback';
-	static public $OAUTH_VERSION = 'oauth_version';
-	static public $OAUTH_SIGNATURE_METHOD = 'oauth_signature_method';
-	static public $OAUTH_SIGNATURE = 'oauth_signature';
-	static public $OAUTH_TIMESTAMP = 'oauth_timestamp';
-	static public $OAUTH_NONCE = 'oauth_nonce';
-	static public $OAUTH_TOKEN = 'oauth_token';
-	static public $OAUTH_TOKEN_SECRET = 'oauth_token_secret';
+    static public $OAUTH_CONSUMER_KEY = 'oauth_consumer_key';
+    static public $OAUTH_CALLBACK = 'oauth_callback';
+    static public $OAUTH_VERSION = 'oauth_version';
+    static public $OAUTH_SIGNATURE_METHOD = 'oauth_signature_method';
+    static public $OAUTH_SIGNATURE = 'oauth_signature';
+    static public $OAUTH_TIMESTAMP = 'oauth_timestamp';
+    static public $OAUTH_NONCE = 'oauth_nonce';
+    static public $OAUTH_TOKEN = 'oauth_token';
+    static public $OAUTH_TOKEN_SECRET = 'oauth_token_secret';
 
-	protected $unreservedChars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_.~';
+    protected $unreservedChars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_.~';
 
-	function GenerateSignature($url, $consumerKey, $consumerSecret, $token, $tokenSecret, &$normalizedUrl, &$normalizedRequestParameters)
-	{
-		$signatureBase = $this->GenerateSignatureBase($url, $consumerKey, $token, 'POST', $this->GenerateTimeStamp(), $this->GenerateNonce(), 'HMAC-SHA1', $normalizedUrl, $normalizedRequestParameters);
-		$secretKey = $this->UrlEncode($consumerSecret) . '&' . $this->UrlEncode($tokenSecret);
+    public function generateSignature($url, $consumerKey, $consumerSecret, $token, $tokenSecret, &$normalizedUrl, &$normalizedRequestParameters)
+    {
+        $signatureBase = $this->generateSignatureBase($url, $consumerKey, $token, 'POST', $this->generateTimeStamp(), $this->generateNonce(), 'HMAC-SHA1', $normalizedUrl, $normalizedRequestParameters);
+        $secretKey = $this->urlEncode($consumerSecret) . '&' . $this->urlEncode($tokenSecret);
 
-		return base64_encode(hash_hmac('sha1', $signatureBase, $secretKey, true));
-	}
+        return base64_encode(hash_hmac('sha1', $signatureBase, $secretKey, true));
+    }
 
-	private function GenerateSignatureBase($url, $consumerKey, $token, $httpMethod, $timeStamp, $nonce, $signatureType, &$normalizedUrl, &$normalizedRequestParameters)
-	{
-		$parameters = array();
+    private function generateSignatureBase($url, $consumerKey, $token, $httpMethod, $timeStamp, $nonce, $signatureType, &$normalizedUrl, &$normalizedRequestParameters)
+    {
+        $parameters = array();
 
-		$elements = explode('?', $url);
-		$parameters = $this->GetQueryParameters($elements[1]);
+        $elements = explode('?', $url);
+        if (count($elements) > 1) {
+            $parameters = $this->getQueryParameters($elements[1]);
+        }
 
-		$parameters[OAuthBase::$OAUTH_VERSION] = OAuthBase::$OAUTH_VERSION_NUMBER;
-		$parameters[OAuthBase::$OAUTH_NONCE] = $nonce;
-		$parameters[OAuthBase::$OAUTH_TIMESTAMP] = $timeStamp;
-		$parameters[OAuthBase::$OAUTH_SIGNATURE_METHOD] = $signatureType;
-		$parameters[OAuthBase::$OAUTH_CONSUMER_KEY] = $consumerKey;
+        $parameters[self::$OAUTH_VERSION] = self::$OAUTH_VERSION_NUMBER;
+        $parameters[self::$OAUTH_NONCE] = $nonce;
+        $parameters[self::$OAUTH_TIMESTAMP] = $timeStamp;
+        $parameters[self::$OAUTH_SIGNATURE_METHOD] = $signatureType;
+        $parameters[self::$OAUTH_CONSUMER_KEY] = $consumerKey;
 
-		if (!empty($token)) {
-			$parameters[ OAuthBase::$OAUTH_TOKEN] = $token;
-		}
+        if (!empty($token)) {
+            $parameters[self::$OAUTH_TOKEN] = $token;
+        }
 
-		$normalizedUrl = $elements[0];
-		$normalizedRequestParameters = $this->NormalizeRequestParameters($parameters);
+        $normalizedUrl = $elements[0];
+        $normalizedRequestParameters = $this->normalizeRequestParameters($parameters);
 
-		return $httpMethod . '&' . UrlEncode($normalizedUrl) . '&' . UrlEncode($normalizedRequestParameters);
-	}
+        return $httpMethod . '&' . $this->urlEncode($normalizedUrl) . '&' . $this->urlEncode($normalizedRequestParameters);
+    }
 
-	private function GetQueryParameters($paramString)
-	{
-		$elements = explode('&',$paramString); // was split
-		$result   = array();
+    private function getQueryParameters($paramString)
+    {
+        $elements = explode('&', $paramString);
+        $result   = array();
 
-		foreach ($elements as $element) {
-			list($key,$token) = explode('=',$element);
-			if ($token)
-				$token = urldecode($token);
-			if (!empty($result[$key])) {
-				if (!is_array($result[$key]))
-					$result[$key] = array($result[$key],$token);
-				else
-					array_push($result[$key],$token);
-			}
-			else
-				$result[$key]=$token;
-		}
-		return $result;
-	}
+        foreach ($elements as $element) {
+            if (strpos($element, '=') === false) {
+                continue;
+            }
 
-	private function NormalizeRequestParameters($parameters)
-	{
-		$elements = array();
-		ksort($parameters);
+            list($key, $value) = explode('=', $element, 2);
+            if ($value) {
+                $value = urldecode($value);
+            }
 
-		foreach ($parameters as $paramName => $paramValue) {
-			array_push($elements,$this->UrlEncode($paramName).'='.$this->UrlEncode($paramValue));
-		}
+            if (!empty($result[$key])) {
+                if (!is_array($result[$key])) {
+                    $result[$key] = array($result[$key], $value);
+                } else {
+                    array_push($result[$key], $value);
+                }
+            } else {
+                $result[$key] = $value;
+            }
+        }
+        return $result;
+    }
 
-		return join('&',$elements);
-	}
+    private function normalizeRequestParameters($parameters)
+    {
+        $elements = array();
+        ksort($parameters);
 
-	private function UrlEncode($string)
-	{
-		$string = urlencode($string);
-		$string = str_replace('+','%20',$string);
-		$string = str_replace('!','%21',$string);
-		$string = str_replace('*','%2A',$string);
-		$string = str_replace('\'','%27',$string);
-		$string = str_replace('(','%28',$string);
-		$string = str_replace(')','%29',$string);
+        foreach ($parameters as $paramName => $paramValue) {
+            array_push($elements, $this->urlEncode($paramName) . '=' . $this->urlEncode($paramValue));
+        }
 
-		return $string;
-	}
+        return join('&', $elements);
+    }
 
-	private function GenerateTimeStamp()
-	{
-		return time();
-	}
+    private function urlEncode($string)
+    {
+        if ($string === null) {
+            return '';
+        }
 
-	private function GenerateNonce()
-	{
-		return md5(uniqid());
-	}
+        $string = urlencode($string);
+        $string = str_replace('+', '%20', $string);
+        $string = str_replace('!', '%21', $string);
+        $string = str_replace('*', '%2A', $string);
+        $string = str_replace('\'', '%27', $string);
+        $string = str_replace('(', '%28', $string);
+        $string = str_replace(')', '%29', $string);
+
+        return $string;
+    }
+
+    private function generateTimeStamp()
+    {
+        return time();
+    }
+
+    private function generateNonce()
+    {
+        return md5(uniqid(rand(), true));
+    }
 }

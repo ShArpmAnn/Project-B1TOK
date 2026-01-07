@@ -6,6 +6,9 @@ use Illuminate\Database\Eloquent\Model;
 
 class DiaryFood extends Model
 {
+
+    protected $table = 'diary_food';
+
     protected $fillable = [
         'callorages_id',
         'food',

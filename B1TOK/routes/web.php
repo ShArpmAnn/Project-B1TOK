@@ -12,6 +12,8 @@ Route::get('/', function () {
     return view('home');
 })->name('home');
 
+Route::get('logs', '\Rap2hpoutre\LaravelLogViewer\LogViewerController@index')->middleware(['web']);
+
 // Адреса доступные для гостя
 Route::middleware('guest')->group(function () {
     Route::get('/register', function (){
@@ -107,6 +109,7 @@ Route::middleware('auth')->group(function () {
 
     Route::post('/recipes/delete', [SaveRecipeController::class, 'delete']
     )->name('delete_recipes');
+
 
 });
 

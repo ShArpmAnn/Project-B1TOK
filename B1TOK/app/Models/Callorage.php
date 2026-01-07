@@ -9,21 +9,24 @@ class Callorage extends Model
 {
     use HasFactory;
 
+    public $timestamps = false;
+
     protected $fillable = [
         'user_id',
         'to_do_callorage',
         'now_callorage',
         'proteins',
         'fats',
-        'carbohydrates'
+        'carbohydrates',
+        'date'
     ];
 
     protected $casts = [
-        'to_do_callorage' => 'unsignedInteger',
-        'now_callorage' => 'unsignedInteger',
-        'proteins' => 'unsignedInteger',
-        'fats' => 'unsignedInteger',
-        'carbohydrates' => 'unsignedInteger',
+        'to_do_callorage' => 'integer',
+        'now_callorage' => 'integer',
+        'proteins' => 'float',
+        'fats' => 'float',
+        'carbohydrates' => 'float',
         'date' => 'date',
     ];
 

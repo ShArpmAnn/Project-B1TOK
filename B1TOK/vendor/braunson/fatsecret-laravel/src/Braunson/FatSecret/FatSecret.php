@@ -1,241 +1,316 @@
 <?php
 namespace Braunson\FatSecret;
 
-use Config, Exception, App, Log;
+use Illuminate\Support\Facades\Log;
 
 class FatSecret
 {
-	static public $base = 'http://platform.fatsecret.com/rest/server.api?format=json&';
+    static public $base = 'https://platform.fatsecret.com/rest/server.api?format=json&';
 
-	/* Private Data */
+    /* Private Data */
+    private $_consumerKey;
+    private $_consumerSecret;
 
-	private $_consumerKey;
-	private $_consumerSecret;
+    /* Constructors */
+    public function __construct($consumerKey, $consumerSecret)
+    {
+        $this->_consumerKey     = $consumerKey;
+        $this->_consumerSecret  = $consumerSecret;
+    }
 
-	/* Constructors */
+    /* Properties */
+    public function getKey()
+    {
+        return $this->_consumerKey;
+    }
 
-	function __construct($consumerKey, $consumerSecret)
-	{
-		$this->_consumerKey 	= $consumerKey;
-		$this->_consumerSecret 	= $consumerSecret;
+    public function setKey($consumerKey)
+    {
+        $this->_consumerKey = $consumerKey;
+    }
 
-		return $this;
-	}
+    public function getSecret()
+    {
+        return $this->_consumerSecret;
+    }
 
-	/* Properties */
+    public function setSecret($consumerSecret)
+    {
+        $this->_consumerSecret = $consumerSecret;
+    }
 
-	function GetKey(){
-		return $this->_consumerKey;
-	}
+    /* Public Methods */
 
-	function SetKey($consumerKey)
-	{
-		$this->_consumerKey = $consumerKey;
-	}
+    /**
+     * Create a new profile with a user specified ID
+     *
+     * @param string $userID  Your ID for the newly created profile
+     * @param string $token   The token for the newly created profile is returned here
+     * @param string $secret  The secret for the newly created profile is returned here
+     */
+    public function profileCreate($userID, &$token, &$secret)
+    {
+        $url = static::$base . 'method=profile.create';
 
-	function GetSecret()
-	{
-		return $this->_consumerSecret;
-	}
+        if (!empty($userID)) {
+            $url = $url . '&user_id=' . $userID;
+        }
 
-	function SetSecret($consumerSecret)
-	{
-		$this->_consumerSecret = $consumerSecret;
-	}
+        $oauth = new OAuthBase();
 
-	/* Public Methods */
+        // Инициализируем переменные
+        $normalizedUrl = '';
+        $normalizedRequestParameters = '';
 
-	/**
-	 * Create a new profile with a user specified ID
-	 *
-	 * @param string $userID  Your ID for the newly created profile (set to null if you are not using your own IDs)
-	 * @param string $token   The token for the newly created profile is returned here
-	 * @param string $secret  The secret for the newly created profile is returned here
-	 */
-	function ProfileCreate($userID, &$token, &$secret)
-	{
-		$url = static::$base . 'method=profile.create';
+        $signature = $oauth->generateSignature($url, $this->_consumerKey, $this->_consumerSecret, null, null, $normalizedUrl, $normalizedRequestParameters);
 
-		if(!empty($userID)){
-			$url = $url . 'user_id=' . $userID;
-		}
+        $response = $this->getQueryResponse($normalizedUrl, $normalizedRequestParameters . '&' . OAuthBase::$OAUTH_SIGNATURE . '=' . urlencode($signature));
 
-		$oauth = new OAuthBase();
+        // Парсим XML ответ
+        $doc = simplexml_load_string($response);
 
-		$normalizedUrl;
-		$normalizedRequestParameters;
+        if ($doc === false) {
+            throw new \Exception('Failed to parse XML response');
+        }
 
-		$signature = $oauth->GenerateSignature($url, $this->_consumerKey, $this->_consumerSecret, null, null, $normalizedUrl, $normalizedRequestParameters);
+        $this->errorCheck($doc);
 
-		$doc = new \SimpleXMLElement($this->GetQueryResponse($normalizedUrl, $normalizedRequestParameters . '&' . OAuthBase::$OAUTH_SIGNATURE . '=' . urlencode($signature)));
+        $token = (string)$doc->auth_token;
+        $secret = (string)$doc->auth_secret;
 
-		$this->ErrorCheck($doc);
+        return true;
+    }
 
-		$token = $doc->auth_token;
-		$secret = $doc->auth_secret;
-	}
+    /**
+     * Get the auth details of a profile
+     *
+     * @param string $userID  Your ID for the profile
+     * @param string $token   The token for the profile is returned here
+     * @param string $secret  The secret for the profile is returned here
+     */
+    public function profileGetAuth($userID, &$token, &$secret)
+    {
+        $url = static::$base . 'method=profile.get_auth&user_id=' . $userID;
 
-	/**
-	 * Get the auth details of a profile
-	 *
-	 * @param string $userID  Your ID for the profile
-	 * @param string $token   The token for the profile is returned here
-	 * @param string $secret  The secret for the profile is returned here
-	 */
-	function ProfileGetAuth($userID, &$token, &$secret)
-	{
-		$url = static::$base . 'method=profile.get_auth&user_id=' . $userID;
+        $oauth = new OAuthBase();
 
-		$oauth = new OAuthBase();
+        // Инициализируем переменные
+        $normalizedUrl = '';
+        $normalizedRequestParameters = '';
 
-		$normalizedUrl;
-		$normalizedRequestParameters;
+        $signature = $oauth->generateSignature($url, $this->_consumerKey, $this->_consumerSecret, null, null, $normalizedUrl, $normalizedRequestParameters);
 
-		$signature = $oauth->GenerateSignature($url, $this->_consumerKey, $this->_consumerSecret, null, null, $normalizedUrl, $normalizedRequestParameters);
+        $response = $this->getQueryResponse($normalizedUrl, $normalizedRequestParameters . '&' . OAuthBase::$OAUTH_SIGNATURE . '=' . urlencode($signature));
 
-		$doc = new \SimpleXMLElement($this->GetQueryResponse($normalizedUrl, $normalizedRequestParameters . '&' . OAuthBase::$OAUTH_SIGNATURE . '=' . urlencode($signature)));
+        $doc = simplexml_load_string($response);
 
-		$this->ErrorCheck($doc);
+        if ($doc === false) {
+            throw new \Exception('Failed to parse XML response');
+        }
 
-		$token = $doc->auth_token;
-		$secret = $doc->auth_secret;
-	}
+        $this->errorCheck($doc);
 
-	/**
-	 * 	Create a new session for JavaScript API users
-	 *
-	 * @param array 	$auth                   	Pass user_id for your own ID or the token and secret for the profile. E.G.: array(user_id=>"user_id")
-	 *                                        		or array(token=>"token", secret=>"secret")
-	 * @param integer 	$expires                	The number of minutes before a session is expired after it is first started. Set this to 0 to never
-	 *                                          	expire the session. (Set to any value less than 0 for default)
-	 * @param integer 	$consumeWithin          	The number of minutes to start using a session after it is first issued. (Set to any value less than
-	 *                                          	0 for default)
-	 * @param string 	$permittedReferrerRegex 	A domain restriction for the session. (Set to null if you do not need this)
-	 * @param bool 		$cookie                 	The desired session_key format
-	 * @param string 	$sessionKey             	The session key for the newly created session is returned here
-	 */
-	function ProfileRequestScriptSessionKey($auth, $expires, $consumeWithin, $permittedReferrerRegex, $cookie, &$sessionKey)
-	{
-		$url = static::$base . 'method=profile.request_script_session_key';
+        $token = (string)$doc->auth_token;
+        $secret = (string)$doc->auth_secret;
 
-		if (!empty($auth['user_id'])) {
-			$url = $url . 'user_id=' . $auth['user_id'];
-		}
+        return true;
+    }
 
-		if ($expires > -1) {
-			$url = $url . '&expires=' . $expires;
-		}
+    /**
+     * Create a new session for JavaScript API users
+     *
+     * @param array $auth                       Pass user_id or token and secret
+     * @param int   $expires                    Minutes before session expires
+     * @param int   $consumeWithin              Minutes to start using session
+     * @param string $permittedReferrerRegex    Domain restriction
+     * @param bool  $cookie                     Session key format
+     * @param string $sessionKey                The session key is returned here
+     */
+    public function profileRequestScriptSessionKey($auth, $expires, $consumeWithin, $permittedReferrerRegex, $cookie, &$sessionKey)
+    {
+        $url = static::$base . 'method=profile.request_script_session_key';
 
-		if ($consumeWithin > -1) {
-			$url = $url . '&consume_within=' . $consumeWithin;
-		}
+        if (!empty($auth['user_id'])) {
+            $url = $url . '&user_id=' . $auth['user_id'];
+        }
 
-		if (!empty($permittedReferrerRegex)) {
-			$url = $url . '&permitted_referrer_regex=' . $permittedReferrerRegex;
-		}
+        if ($expires > -1) {
+            $url = $url . '&expires=' . $expires;
+        }
 
-		if ($cookie == true) {
-			$url = $url . "&cookie=true";
-		}
+        if ($consumeWithin > -1) {
+            $url = $url . '&consume_within=' . $consumeWithin;
+        }
 
-		$oauth = new \OAuthBase();
+        if (!empty($permittedReferrerRegex)) {
+            $url = $url . '&permitted_referrer_regex=' . urlencode($permittedReferrerRegex);
+        }
 
-		$normalizedUrl;
-		$normalizedRequestParameters;
+        if ($cookie === true) {
+            $url = $url . "&cookie=true";
+        }
 
-		$signature = $oauth->GenerateSignature($url, $this->_consumerKey, $this->_consumerSecret, $auth['token'], $auth['secret'], $normalizedUrl, $normalizedRequestParameters);
+        $oauth = new OAuthBase();
 
-		$doc = new \SimpleXMLElement($this->GetQueryResponse($normalizedUrl, $normalizedRequestParameters . '&' . OAuthBase::$OAUTH_SIGNATURE . '=' . urlencode($signature)));
+        // Инициализируем переменные
+        $normalizedUrl = '';
+        $normalizedRequestParameters = '';
 
-		$this->ErrorCheck($doc);
+        $token = isset($auth['token']) ? $auth['token'] : null;
+        $secret = isset($auth['secret']) ? $auth['secret'] : null;
 
-		$sessionKey = $doc->session_key;
-	}
+        $signature = $oauth->generateSignature($url, $this->_consumerKey, $this->_consumerSecret, $token, $secret, $normalizedUrl, $normalizedRequestParameters);
 
-	/**
-	 * Search ingredients by phrase, page and max results
-	 *
-	 * @param  string  $search_phrase The phrase you want to search for
-	 * @param  integer $page          The page number of results you want to return (default 0)
-	 * @param  integer $maxresults    The number of results you want returned (default 50)
-	 * @return json
-	 */
-	public function searchIngredients($search_phrase, $page = 0, $maxresults = 50)
-	{
-		$url = static::$base . 'method=foods.search&page_number=' . $page . '&max_results=' . $maxresults . '&search_expression=' . $search_phrase;
+        $response = $this->getQueryResponse($normalizedUrl, $normalizedRequestParameters . '&' . OAuthBase::$OAUTH_SIGNATURE . '=' . urlencode($signature));
 
-		$oauth = new OAuthBase();
+        $doc = simplexml_load_string($response);
 
-		$normalizedUrl;
-		$normalizedRequestParameters;
+        if ($doc === false) {
+            throw new \Exception('Failed to parse XML response');
+        }
 
-		$signature = $oauth->GenerateSignature($url, $this->_consumerKey, $this->_consumerSecret, null, null, $normalizedUrl, $normalizedRequestParameters);
-		$response = $this->GetQueryResponse($normalizedUrl, $normalizedRequestParameters . '&' . OAuthBase::$OAUTH_SIGNATURE . '=' . urlencode($signature));
+        $this->errorCheck($doc);
 
-		return $response;
-	}
+        $sessionKey = (string)$doc->session_key;
 
-	/**
-	 * Reqtrieve an ingredient by ID
-	 *
-	 * @param  integer $ingredient_id  The ingredient ID
-	 * @return json
-	 */
-	function getIngredient($ingredient_id)
-	{
-		$url = static::$base . 'method=food.get&food_id=' . $ingredient_id;
+        return true;
+    }
 
-		$oauth = new OAuthBase();
+    /**
+     * Search ingredients by phrase, page and max results
+     *
+     * @param string $searchPhrase The phrase you want to search for
+     * @param int $page Page number (default 0)
+     * @param int $maxResults Number of results (default 50)
+     * @return array JSON decoded response
+     */
+    public function searchIngredients($searchPhrase, $page = 0, $maxResults = 50)
+    {
+        $url = static::$base . 'method=foods.search&page_number=' . $page . '&max_results=' . $maxResults . '&search_expression=' . urlencode($searchPhrase);
 
-		$normalizedUrl;
-		$normalizedRequestParameters;
+        $oauth = new OAuthBase();
 
-		$signature = $oauth->GenerateSignature($url, $this->_consumerKey, $this->_consumerSecret, null, null, $normalizedUrl, $normalizedRequestParameters);
-		$response = $this->GetQueryResponse($normalizedUrl, $normalizedRequestParameters . '&' . OAuthBase::$OAUTH_SIGNATURE . '=' . urlencode($signature));
+        // Инициализируем переменные
+        $normalizedUrl = '';
+        $normalizedRequestParameters = '';
 
-		return $response;
-	}
+        $signature = $oauth->generateSignature($url, $this->_consumerKey, $this->_consumerSecret, null, null, $normalizedUrl, $normalizedRequestParameters);
 
-	/* Private Methods */
+        $response = $this->getQueryResponse($normalizedUrl, $normalizedRequestParameters . '&' . OAuthBase::$OAUTH_SIGNATURE . '=' . urlencode($signature));
 
-	/**
-	 * Call the url and return the resonse
-	 *
-	 * @param string $requestUrl The url we want to call
-	 * @param array $postString  The array of fields passed in the call
-	 */
-	private function GetQueryResponse($requestUrl, $postString)
-	{
-		$ch = curl_init();
+        // Декодируем JSON ответ
+        $decodedResponse = json_decode($response, true);
 
-		curl_setopt($ch, CURLOPT_URL, $requestUrl);
-		curl_setopt($ch, CURLOPT_HEADER, false);
-		curl_setopt($ch, CURLOPT_POST, true);
-		curl_setopt($ch, CURLOPT_POSTFIELDS, $postString);
-		curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        if ($decodedResponse === null && json_last_error() !== JSON_ERROR_NONE) {
+            throw new \Exception('Failed to decode JSON response: ' . json_last_error_msg());
+        }
 
-		$response = curl_exec($ch);
+        $this->errorCheck($decodedResponse);
 
-		curl_close($ch);
+        return $decodedResponse;
+    }
 
-		$response = json_decode($response, true);
+    /**
+     * Retrieve an ingredient by ID
+     *
+     * @param int $ingredientId The ingredient ID
+     * @return array JSON decoded response
+     */
+    public function getIngredient($ingredientId)
+    {
+        $url = static::$base . 'method=food.get&food_id=' . $ingredientId;
 
-		$this->ErrorCheck($response);
+        $oauth = new OAuthBase();
 
-		return $response;
-	}
+        // Инициализируем переменные
+        $normalizedUrl = '';
+        $normalizedRequestParameters = '';
 
-	/**
-	 * Checking for any errors, if so we throw a fatal Laravel error
-	 *
-	 * @param array $exception
-	 */
-	private function ErrorCheck($exception)
-	{
-		if (isset($exception['error'])) {
-			\Log::error($exception['error']['message']);
-			$backtrace = debug_backtrace();
-			throw new \ErrorException($exception['error']['message'], 0, $exception['error']['code'], __FILE__, $backtrace[0]['line']);
-		}
-	}
+        $signature = $oauth->generateSignature($url, $this->_consumerKey, $this->_consumerSecret, null, null, $normalizedUrl, $normalizedRequestParameters);
+
+        $response = $this->getQueryResponse($normalizedUrl, $normalizedRequestParameters . '&' . OAuthBase::$OAUTH_SIGNATURE . '=' . urlencode($signature));
+
+        // Декодируем JSON ответ
+        $decodedResponse = json_decode($response, true);
+
+        if ($decodedResponse === null && json_last_error() !== JSON_ERROR_NONE) {
+            throw new \Exception('Failed to decode JSON response: ' . json_last_error_msg());
+        }
+
+        $this->errorCheck($decodedResponse);
+
+        return $decodedResponse;
+    }
+
+    /* Private Methods */
+
+    /**
+     * Call the URL and return the response
+     *
+     * @param string $requestUrl The URL we want to call
+     * @param string $postString The POST fields
+     * @return string Raw response
+     */
+    private function getQueryResponse($requestUrl, $postString)
+    {
+        // Проверяем наличие расширения curl
+        if (!extension_loaded('curl')) {
+            throw new \Exception('cURL extension is required but not loaded');
+        }
+
+        $ch = curl_init();
+
+        curl_setopt($ch, CURLOPT_URL, $requestUrl);
+        curl_setopt($ch, CURLOPT_HEADER, false);
+        curl_setopt($ch, CURLOPT_POST, true);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, $postString);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 30);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, [
+            'Content-Type: application/x-www-form-urlencoded',
+        ]);
+
+        $response = curl_exec($ch);
+
+        if (curl_errno($ch)) {
+            $errorMsg = curl_error($ch);
+            curl_close($ch);
+            throw new \Exception('cURL Error: ' . $errorMsg);
+        }
+
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+
+        if ($httpCode !== 200) {
+            throw new \Exception('HTTP Error: ' . $httpCode);
+        }
+
+        return $response;
+    }
+
+    /**
+     * Checking for any errors in the response
+     *
+     * @param mixed $response SimpleXMLElement or array
+     */
+    private function errorCheck($response)
+    {
+        // Если это SimpleXMLElement
+        if ($response instanceof \SimpleXMLElement) {
+            if (isset($response->error)) {
+                $errorMessage = (string)$response->error->message;
+                $errorCode = (int)$response->error->code;
+                Log::error('FatSecret API Error (XML): ' . $errorMessage);
+                throw new \Exception('FatSecret API Error: ' . $errorMessage, $errorCode);
+            }
+        }
+        // Если это массив (JSON ответ)
+        elseif (is_array($response) && isset($response['error'])) {
+            $errorMessage = $response['error']['message'] ?? 'Unknown error';
+            $errorCode = $response['error']['code'] ?? 0;
+            Log::error('FatSecret API Error (JSON): ' . $errorMessage);
+            throw new \Exception('FatSecret API Error: ' . $errorMessage, $errorCode);
+        }
+    }
 }
