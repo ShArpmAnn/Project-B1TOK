@@ -2,15 +2,53 @@
 
 namespace Tests\Feature;
 
+use App\Models\Callorage;
+use App\Models\DiaryFood;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\WithFaker;
 use Tests\TestCase;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
+use function PHPUnit\Framework\assertNotEquals;
 
 class FatSecretApiFlowTest extends TestCase
 {
 
-    use RefreshDatabase;
+    use RefreshDatabase, WithFaker;
+
+    public function test_fatsecret_api_connection()
+    {
+        $key = env('FATSECRET_KEY');
+        $secret = env('FATSECRET_SECRET');
+
+        Log::info('Проверка API ключей:', ['key_exists' => !empty($key), 'secret_exists' => !empty($secret)]);
+
+
+        try {
+            //Прямой вызов FatSecret
+            $fatSecret = new \Braunson\FatSecret\FatSecret($key, $secret);
+
+            $result = $fatSecret->searchIngredients('apple', 0, 1);
+
+            Log::info('Результат теста API:', ['result' => $result]);
+
+            $this->assertNotNull($result, 'API должен что-то вернуть');
+
+            if (is_string($result)) {
+                $decoded = json_decode($result, true);
+                $this->assertNotNull($decoded, 'Должен быть верный JSON');
+            }
+
+        } catch (\Exception $e) {
+            Log::error('API тест провален:', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            $this->fail('API подключение упало: ' . $e->getMessage());
+        }
+    }
     public function test_add_to_diary()
     {
         // Пропускаем тест, если нет ключей API
@@ -18,11 +56,13 @@ class FatSecretApiFlowTest extends TestCase
             $this->markTestSkipped('FatSecret API ключи не настроены');
         }
 
+        $password = $this->faker->password(8) . '!@#';
+
         $userData = [
-            'name' => 'Иван Иванов',
-            'email' => 'test-' . time() . '@gmail.com', // Уникальный email
-            'password' => 'SecurePassword123!@#',
-            'password_confirmation' => 'SecurePassword123!@#',
+            'name' => $this->faker->firstName . ' ' . $this->faker->lastName,
+            'email' => 'test.' . time() . '@gmail.com',
+            'password' => $password,
+            'password_confirmation' => $password,
         ];
 
         // Регистрация
@@ -30,37 +70,37 @@ class FatSecretApiFlowTest extends TestCase
         $response->assertRedirect('/');
         $response->assertSessionHas('success', 'Регистрация успешна');
 
-        // Создание цели по весу
+
+        $start_weight = $this->faker->numberBetween(50, 120);
+
         $weightData = [
-            'gender' => 'male',
-            'start_weight' => 60,
-            'height' => 175,
-            'old' => 23,
-            'end_weight' => 70,
-            'activity' => 'medium',
-            'choose' => 'increase',
-            'temp' => 'fast',
+            'gender' => $this->faker->randomElement(['male', 'female']),
+            'start_weight' => $start_weight,
+            'height' => $this->faker->numberBetween(140, 210),
+            'old' => $this->faker->numberBetween(15, 60),
+            'end_weight' => $start_weight + $this->faker->numberBetween(5, 20),
+            'activity' => $this->faker->randomElement(['min', 'light', 'medium', 'big', 'very_big']),
+            'choose' => $this->faker->randomElement(['drop', 'increase']),
+            'temp' => $this->faker->randomElement(['slow', 'fast']),
         ];
 
         $response = $this->post(route('create_weight'), $weightData);
         $response->assertRedirect('/personal_cabinet');
         $response->assertSessionHas('success', 'Цель создана');
 
-        // Добавление пищи в дневник через реальное API
+
         $foodData = [
-            'query' => 'banana',
-            'date' => date('Y-m-d'), // Текущая дата
-            'serving_index' => '0',
-            'quantity' => '1',
-            'eat_type' => 'breakfast',
+            'query' => $this->faker->randomElement(['banana', 'egg', 'apple']),
+            'date' => $this->faker->date('Y-m-d'),
+            'serving_index' => $this->faker->numberBetween(0, 2),
+            'quantity' => $this->faker->randomFloat(1, 0.1, 10),
+            'eat_type' => $this->faker->randomElement(['breakfast', 'lunch', 'dinner']),
         ];
 
 
         $response = $this->post(route('diary_new'), $foodData);
 
-        // API может вернуть разные статусы в зависимости от ответа
         if ($response->status() === 500) {
-            // Логируем ошибку, но не падаем
             Log::warning('FatSecret API вернул 500', [
                 'content' => $response->getContent(),
                 'session' => session()->all(),
@@ -71,157 +111,167 @@ class FatSecretApiFlowTest extends TestCase
             $this->assertNotEquals(419, $response->status(), 'Ошибка CSRF токена');
             $this->assertNotEquals(422, $response->status(), 'Ошибка валидации');
 
-                // Тест считается успешным, если проблема в API, а не в коде
-            $this->addToAssertionCount(1);
+            $this->markTestSkipped('Ошибка API');
         } else {
-            // Проверяем редирект
-            $response->assertRedirect('/diary');
 
-            // Проверяем сообщение (может быть другое, если API не сработало)
+            $response->assertRedirect('/diary');
             $successMessage = session('success');
+
             if ($successMessage) {
                 $response->assertSessionHas('success');
             } else {
-                // Если нет success, проверяем error
                 $errorMessage = session('error');
                 if ($errorMessage) {
                     Log::info('API вернул ошибку: ' . $errorMessage);
-                    // Тест все равно проходит, если это ошибка API
-                    $this->addToAssertionCount(1);
+                    $this->markTestSkipped('API вернул ошибку: ' . $errorMessage);
                 }
             }
         }
 
     }
 
-    public function test_fatsecret_api_connection()
+    public function test_many_add_to_diary()
     {
-        $key = env('FATSECRET_KEY');
-        $secret = env('FATSECRET_SECRET');
-
-        Log::info('Checking API keys:', ['key_exists' => !empty($key), 'secret_exists' => !empty($secret)]);
-
-
-        try {
-            // Пробуем напрямую вызвать FatSecret
-            $fatSecret = new \Braunson\FatSecret\FatSecret($key, $secret);
-
-            // Простой поиск
-            $result = $fatSecret->searchIngredients('apple', 0, 1);
-
-            Log::info('API test result:', ['result' => $result]);
-
-            $this->assertNotNull($result, 'API should return something');
-
-            if (is_string($result)) {
-                $decoded = json_decode($result, true);
-                $this->assertNotNull($decoded, 'Should be valid JSON');
-            }
-
-        } catch (\Exception $e) {
-            Log::error('API connection test failed:', [
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ]);
-
-            $this->fail('API connection failed: ' . $e->getMessage());
+        // Пропускаем тест, если нет ключей API
+        if (empty(env('FATSECRET_KEY')) || empty(env('FATSECRET_SECRET'))) {
+            $this->markTestSkipped('FatSecret API ключи не настроены');
         }
-    }
 
-    public function test_debug_diary_flow()
-    {
-        Log::info('=== DEBUG DIARY FLOW START ===');
+        $password = $this->faker->password(8) . '!@#';
 
-        $user = \App\Models\User::factory()->create();
-        $this->actingAs($user);
+        $userData = [
+            'name' => $this->faker->firstName . ' ' . $this->faker->lastName,
+            'email' => 'test.' . time() . '@gmail.com',
+            'password' => $password,
+            'password_confirmation' => $password,
+        ];
 
-        Log::info('User created', ['user_id' => $user->id]);
+        // Регистрация
+        $response = $this->post('/register', $userData);
+        $response->assertRedirect('/');
+        $response->assertSessionHas('success', 'Регистрация успешна');
 
-        // Создаем цель веса
-        $weight = \App\Models\Weight::create([
-            'user_id' => $user->id,
-            'start_weight' => 60,
-            'end_weight' => 70,
-            'now_weight' => 60,
-            'to_do_weight' => 10,
-            'used_now' => true,
-            'callorage' => 2500,
-        ]);
 
-        Log::info('Weight created', ['weight_id' => $weight->id, 'callorage' => $weight->callorage]);
+        $start_weight = $this->faker->numberBetween(50, 120);
 
-        // Прямой тест CallorageController
-        $nutritionData = [
-            'food_id' => 'test_123',
-            'name' => 'Banana',
-            'calories' => 105,
-            'proteins' => 1.3,
-            'fats' => 0.4,
-            'carbohydrates' => 27,
-            'date' => date('Y-m-d'),
+        $weightData = [
+            'gender' => $this->faker->randomElement(['male', 'female']),
+            'start_weight' => $start_weight,
+            'height' => $this->faker->numberBetween(140, 210),
+            'old' => $this->faker->numberBetween(15, 60),
+            'end_weight' => $start_weight + $this->faker->numberBetween(5, 20),
+            'activity' => $this->faker->randomElement(['min', 'light', 'medium', 'big', 'very_big']),
+            'choose' => $this->faker->randomElement(['drop', 'increase']),
+            'temp' => $this->faker->randomElement(['slow', 'fast']),
+        ];
+
+        $response = $this->post(route('create_weight'), $weightData);
+        $response->assertRedirect('/personal_cabinet');
+        $response->assertSessionHas('success', 'Цель создана');
+
+
+        $foodData1 = [
+            'query' => $this->faker->randomElement(['banana', 'egg', 'apple']),
+            'date' => $this->faker->date('Y-m-d'),
+            'serving_index' => $this->faker->numberBetween(0, 2),
+            'quantity' => $this->faker->randomFloat(1, 0.1, 10),
+            'eat_type' => $this->faker->randomElement(['breakfast', 'lunch', 'dinner']),
+        ];
+
+        $response = $this->post(route('diary_new'), $foodData1);
+        $response->assertRedirect('/diary');
+        $response->assertSessionHas('success');
+
+
+        $date = $this->faker->date('Y-m-d');
+        $foodData2 = [
+            'query' => $this->faker->randomElement(['banana', 'egg', 'apple']),
+            'date' => $date,
+            'serving_index' => $this->faker->numberBetween(0, 2),
+            'quantity' => $this->faker->randomFloat(1, 0.1, 10),
             'eat_type' => 'breakfast',
         ];
 
-        Log::info('Calling CallorageController with data:', $nutritionData);
 
-        $controller = new \App\Http\Controllers\CallorageController();
+        $response = $this->post(route('diary_new'), $foodData2);
+        $response->assertRedirect('/diary');
+        $response->assertSessionHas('success');
 
-        try {
-            $response = $controller->update($nutritionData);
+        $user_id = Auth::id();
+        $diaryEntriesCount = DB::table('callorages')
+            ->where('user_id', $user_id )
+            ->count();
 
-            Log::info('CallorageController response', [
-                'type' => get_class($response),
-                'is_redirect' => $response instanceof \Illuminate\Http\RedirectResponse,
-                'redirect_url' => $response->getTargetUrl(),
-                'session_success' => session('success'),
-            ]);
+        $this->assertEquals(2, $diaryEntriesCount,
+            "Должно быть 2 записи в дневнике питания для пользователя ID: {$user_id}"
+        );
 
-            // Проверяем базу
-            $callorage = \App\Models\Callorage::where('user_id', $user->id)
-                ->where('date', date('Y-m-d'))
-                ->first();
+        $foodData3 = [
+            'query' => $this->faker->randomElement(['banana', 'egg', 'apple']),
+            'date' => $date,
+            'serving_index' => $this->faker->numberBetween(0, 2),
+            'quantity' => $this->faker->randomFloat(1, 0.1, 10),
+            'eat_type' => 'lunch',
+        ];
 
-            Log::info('Callorage after update:', [
-                'exists' => !is_null($callorage),
-                'id' => $callorage ? $callorage->id : null,
-                'now_callorage' => $callorage ? $callorage->now_callorage : null,
-                'to_do_callorage' => $callorage ? $callorage->to_do_callorage : null,
-            ]);
+        $response = $this->post(route('diary_new'), $foodData3);
+        $response->assertRedirect('/diary');
+        $response->assertSessionHas('success');
 
-            if ($callorage) {
-                $diaryFood = \App\Models\DiaryFood::where('callorages_id', $callorage->id)
-                    ->where('eat_type', 'breakfast')
-                    ->first();
+        $diaryEntriesCount = DB::table('callorages')
+            ->where('user_id', $user_id )
+            ->count();
 
-                Log::info('DiaryFood after update:', [
-                    'exists' => !is_null($diaryFood),
-                    'food_data' => $diaryFood ? $diaryFood->food : null,
-                ]);
-            }
+        $this->assertEquals(2, $diaryEntriesCount,
+            "Должно быть 2 записи в дневнике питания для пользователя ID: {$user_id}"
+        );
 
-            // Проверяем все записи в таблицах
-            $allCallorages = \App\Models\Callorage::all();
-            $allDiaryFoods = \App\Models\DiaryFood::all();
+        $currentCallorage = Callorage::forUser(Auth::id())->date($date)->first();
+        $id = $currentCallorage->id;
 
-            Log::info('All data in database:', [
-                'callorages_count' => $allCallorages->count(),
-                'diary_foods_count' => $allDiaryFoods->count(),
-                'callorages' => $allCallorages->toArray(),
-                'diary_foods' => $allDiaryFoods->toArray(),
-            ]);
+        $diaryEntriesCount = DB::table('diary_food')
+            ->where('callorages_id', $id )
+            ->count();
 
-        } catch (\Exception $e) {
-            Log::error('Exception in debug test:', [
-                'message' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
-                'file' => $e->getFile(),
-                'line' => $e->getLine(),
-            ]);
-        }
+        $this->assertEquals(2, $diaryEntriesCount,
+            "Должно быть 2 записи в дневнике питания для callorage ID: {$id}"
+        );
 
-        Log::info('=== DEBUG DIARY FLOW END ===');
+        $query = 'banana';
+        $foodData4 = [
+            'query' => $query,
+            'date' => $date,
+            'serving_index' => $this->faker->numberBetween(0, 2),
+            'quantity' => $this->faker->randomFloat(1, 0.1, 10),
+            'eat_type' => 'lunch',
+        ];
 
-        $this->assertTrue(true); // Просто чтобы тест прошел
+        $response = $this->post(route('diary_new'), $foodData4);
+        $response->assertRedirect('/diary');
+        $response->assertSessionHas('success');
+
+        $diary = DiaryFood::forDiary($id, 'lunch')->first();
+        $food = $diary->food;
+        $callorage1 = $food['Bananas']['calories'];
+
+        $foodData5 = [
+            'query' => $query,
+            'date' => $date,
+            'serving_index' => $this->faker->numberBetween(0, 2),
+            'quantity' => $this->faker->randomFloat(1, 0.1, 10),
+            'eat_type' => 'lunch',
+        ];
+
+        $response = $this->post(route('diary_new'), $foodData5);
+        $response->assertRedirect('/diary');
+        $response->assertSessionHas('success');
+
+        $diary = DiaryFood::forDiary($id, 'lunch')->first();
+        $food = $diary->food;
+        $callorage2 = $food['Bananas']['calories'];
+
+        assertNotEquals($callorage1, $callorage2);
+        Log::info("Знаячения калларажей: ", [$callorage1, $callorage2]);
     }
 
 }

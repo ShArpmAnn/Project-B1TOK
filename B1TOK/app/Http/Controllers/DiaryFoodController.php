@@ -4,16 +4,13 @@ namespace App\Http\Controllers;
 
 use App\Models\DiaryFood;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
+
 
 class DiaryFoodController extends Controller
 {
     // Сохранение продуктов из дневника по типу приёма пищи
     public function update($Diary) : RedirectResponse {
-        Log::info('DiaryFoodController update called', $Diary);
         $diary = DiaryFood::forDiary($Diary['callorages_id'], $Diary['eat_type'])->first();
-
 
         if (!$diary) {
 
@@ -33,12 +30,22 @@ class DiaryFoodController extends Controller
         else {
             $food = $diary->food;
 
-            $food[$Diary['name']] = [
-                'calories' => $Diary['calories'],
-                'proteins' => $Diary['proteins'],
-                'fats' => $Diary['fats'],
-                'carbohydrates' => $Diary['carbohydrates'],
-            ];
+            if(isset($food[$Diary['name']])) {
+                $food[$Diary['name']] = [
+                    'calories' => $food[$Diary['name']]['calories'] + $Diary['calories'],
+                    'proteins' => $food[$Diary['name']]['proteins'] + $Diary['proteins'],
+                    'fats' => $food[$Diary['name']]['fats'] + $Diary['fats'],
+                    'carbohydrates' => $food[$Diary['name']]['carbohydrates'] + $Diary['carbohydrates'],
+                ];
+            }
+            else{
+                $food[$Diary['name']] = [
+                    'calories' => $Diary['calories'],
+                    'proteins' => $Diary['proteins'],
+                    'fats' => $Diary['fats'],
+                    'carbohydrates' => $Diary['carbohydrates'],
+                ];
+            }
 
             $diary->update([
                 'food' => $food,

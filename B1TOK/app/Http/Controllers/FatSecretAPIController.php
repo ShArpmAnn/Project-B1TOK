@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use Braunson\FatSecret\Facade as FatSecret;
-use App\Http\Controllers\CallorageController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
