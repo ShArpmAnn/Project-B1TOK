@@ -7,6 +7,7 @@ use App\Models\Weight;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 
 class CallorageController extends Controller
@@ -56,41 +57,49 @@ class CallorageController extends Controller
         $diaryController->update($Diary);
 
 
-        return redirect()->intended(route('diary', absolute: false))->with('success', 'Запись сохранена');
+        return redirect()->intended(route('diary', absolute: false))
+            ->with('success', 'Запись сохранена');
     }
 
     // Удаление продукта из дневника
     public function delete(Request $request) : RedirectResponse {
+        Log::info('Delete request data:', $request->all());
         $currentCallorage = Callorage::forUser(Auth::id())->date($request->date)->first();
+        Log::info('Current callorage:', $currentCallorage ? $currentCallorage->toArray() : ['message' => 'not found']);
 
-        $diaryfood = DiaryFood::forDiary($currentCallorage->callorages_id, $request->eat_type)->first();
+        $diaryfood = DiaryFood::forDiary($currentCallorage->id, $request->eat_type)->first();
 
         $food = $diaryfood->food;
-        $food = $food[$request->name];
+        $food_now = $food[$request->name];
 
-        if ($currentCallorage->to_do_callorage + $food['calories'] < 0){
+        if ($currentCallorage->to_do_callorage + $food_now['calories'] < 0){
             $currentCallorage->update([
                 'to_do_callorage' => 0,
             ]);
         }
         else{
             $currentCallorage->update([
-                'to_do_callorage' => $currentCallorage->to_do_callorage + $food['calories'],
+                'to_do_callorage' => $currentCallorage->to_do_callorage + $food_now['calories'],
             ]);
         }
 
         $currentCallorage->update([
-            'now_callorage' => $currentCallorage->now_callorage - $food['calories'],
-            'proteins' => $currentCallorage->proteins - $food['proteins'],
-            'fats' => $currentCallorage->fats - $food['fats'],
-            'carbohydrates' => $currentCallorage->carbohydrates - $food['carbohydrates'],
+            'now_callorage' => $currentCallorage->now_callorage - $food_now['calories'],
+            'proteins' => $currentCallorage->proteins - $food_now['proteins'],
+            'fats' => $currentCallorage->fats - $food_now['fats'],
+            'carbohydrates' => $currentCallorage->carbohydrates - $food_now['carbohydrates'],
         ]);
         unset($food[$request->name]);
 
-        $diaryfood->update([
-            'food' => $food,
-        ]);
+        if (count($food) > 0) {
+            $diaryfood->update([
+                'food' => $food,
+            ]);
+        } else {
+            $diaryfood->delete();
+        }
 
-        return redirect()->intended(route('diary', absolute: false))->with('success', 'Запись удалена');
+        return redirect()->intended(route('diary', absolute: false))
+            ->with('success', 'Запись удалена');
     }
 }

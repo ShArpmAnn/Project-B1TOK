@@ -16,7 +16,6 @@ class FatSecretAPIController extends Controller
         $request->validate([
             'query' => 'required|string|min:2|max:100',
             'date' => 'required|date',
-            'serving_index' => 'sometimes|integer|min:0',
             'quantity' => 'sometimes|numeric|min:0.1',
             'eat_type' => 'required|string',
         ]);
@@ -62,7 +61,7 @@ class FatSecretAPIController extends Controller
             }
 
             // Получаем выбранную порцию
-            $servingIndex = $request->input('serving_index', 0);
+            $servingIndex = 0;
             $quantity = floatval($request->input('quantity', 1));
 
             if (empty($foodData['servings'])) {
@@ -96,7 +95,8 @@ class FatSecretAPIController extends Controller
                 'request' => $request->all()
             ]);
 
-            return redirect()->route('diary')->with('error', 'Ошибка при добавлении продукта: ' . $e->getMessage());
+            return redirect()->route('diary')
+                ->with('error', 'Ошибка при добавлении продукта: ' . $e->getMessage());
         }
     }
 

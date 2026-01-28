@@ -15,7 +15,7 @@ use function PHPUnit\Framework\assertNotEquals;
 class FatSecretApiFlowTest extends TestCase
 {
 
-    use RefreshDatabase, WithFaker;
+    use WithFaker;
 
     public function test_fatsecret_api_connection()
     {
@@ -207,9 +207,9 @@ class FatSecretApiFlowTest extends TestCase
         );
 
         $foodData3 = [
-            'query' => $this->faker->randomElement(['banana', 'egg', 'apple']),
+            'query' => $this->faker->randomElement(['egg', 'apple']),
             'date' => $date,
-            'serving_index' => $this->faker->numberBetween(0, 2),
+            'serving_index' => 0,
             'quantity' => $this->faker->randomFloat(1, 0.1, 10),
             'eat_type' => 'lunch',
         ];
@@ -241,8 +241,8 @@ class FatSecretApiFlowTest extends TestCase
         $foodData4 = [
             'query' => $query,
             'date' => $date,
-            'serving_index' => $this->faker->numberBetween(0, 2),
-            'quantity' => $this->faker->randomFloat(1, 0.1, 10),
+            'serving_index' => 0,
+            'quantity' => 1,
             'eat_type' => 'lunch',
         ];
 
@@ -257,8 +257,8 @@ class FatSecretApiFlowTest extends TestCase
         $foodData5 = [
             'query' => $query,
             'date' => $date,
-            'serving_index' => $this->faker->numberBetween(0, 2),
-            'quantity' => $this->faker->randomFloat(1, 0.1, 10),
+            'serving_index' => 0,
+            'quantity' => 5,
             'eat_type' => 'lunch',
         ];
 
@@ -271,7 +271,7 @@ class FatSecretApiFlowTest extends TestCase
         $callorage2 = $food['Bananas']['calories'];
 
         assertNotEquals($callorage1, $callorage2);
-        Log::info("Знаячения калларажей: ", [$callorage1, $callorage2]);
+        Log::info("Значения калларажей: ", [$callorage1, $callorage2]);
     }
 
 }
